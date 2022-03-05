@@ -96,18 +96,42 @@ esp_err_t PCF_Read(uint8_t addr, uint8_t *data, size_t length)
 }
 
 
-int PCF_Init(uint8_t mode){
+/**
+ * @brief Initialize the control register to Write/Read on the RTC
+ *
+ * @return int -1 if write fails, 0 if its okay
+ */
+int PCF_Init(void)
+{
 	static bool init = false;
-	if(!init){
+	if (!init)
+	{
 		uint8_t tmp = 0b00000000;
-		esp_err_t ret = PCF_Write(0x00, &tmp, 1);
-		if (ret != ESP_OK){
+		esp_err_t ret = PCF_Write(0x00, &tmp, 1); 	// Control register 1
+		if (ret != ESP_OK)
+		{
 			return -1;
 		}
-		mode &= 0b00010011;
-		ret = PCF_Write(0x01, &mode, 1);
-		if (ret != ESP_OK){
-			return -2;
+
+		tmp = 0b10110000;
+		ret = PCF_Write(0x01, &tmp, 1); 	// Control register 2
+		if (ret != ESP_OK)
+		{
+			return -1;
+		}
+
+		tmp = 0b00000000;
+		ret = PCF_Write(0x02, &tmp, 1); 	// Offset register
+		if (ret != ESP_OK)
+		{
+			return -1;
+		}
+
+		tmp = 0b00000000;
+		ret = PCF_Write(0x03, &tmp, 1); 	// RAM register
+		if (ret != ESP_OK)
+		{
+			return -1;
 		}
 		init = true;
 	}
