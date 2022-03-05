@@ -95,9 +95,6 @@ esp_err_t PCF_Read(uint8_t addr, uint8_t *data, size_t length)
 	return ret;
 }
 
-esp_err_t PCF_GetLastError(){
-	return last_i2c_err;
-}
 
 int PCF_Init(uint8_t mode){
 	static bool init = false;
@@ -117,92 +114,6 @@ int PCF_Init(uint8_t mode){
 	return 0;
 }
 
-int PCF_GetAndClearFlags(){
-	uint8_t flags;
-
-	esp_err_t ret = PCF_Read(0x01, &flags, 1);
-	if (ret != ESP_OK){
-		return -1;
-	}
-	uint8_t cleared = flags & 0b00010011;
-	ret = PCF_Write(0x01, &cleared, 1);
-	if (ret != ESP_OK){
-		return -1;
-	}
-
-	return flags & 0x0C;
-}
-
-int PCF_SetClockOut(uint8_t mode){
-
-	mode &= 0b10000011;
-	esp_err_t ret = PCF_Write(0x0D, &mode, 1);
-	if (ret != ESP_OK) {
-		return -1;
-	}
-	return 0;	
-}
-
-int PCF_SetTimer(uint8_t mode, uint8_t count){
-
-	mode &= 0b10000011;
-	esp_err_t ret = PCF_Write(0x0E, &mode, 1);
-	if (ret != ESP_OK) {
-		return -1;
-	}
-	ret = PCF_Write(0x0F, &count, 1);
-	if (ret != ESP_OK) {
-		return -1;
-	}
-	return 0;
-}
-
-int PCF_GetTimer(){
-	uint8_t count;
-
-	esp_err_t ret = PCF_Read(0x0F, &count, 1);
-	if (ret != ESP_OK) {
-		return -1;
-	}
-	return (int) count;
-}
-
-int PCF_SetAlarm(PCF_Alarm *alarm){
-	if ((alarm->minute >= 60 && alarm->minute != 80) || (alarm->hour >= 24 && alarm->hour != 80) || (alarm->day > 32 && alarm->day != 80) || (alarm->weekday > 6 && alarm->weekday != 80))
-	{
-		return -2;
-	}
-
-	uint8_t buffer[4];
-
-	buffer[0] = BinToBCD(alarm->minute) & 0xFF;
-	buffer[1] = BinToBCD(alarm->hour) & 0xBF;
-	buffer[2] = BinToBCD(alarm->day) & 0xBF;
-	buffer[3] = BinToBCD(alarm->weekday) & 0x87;
-
-	esp_err_t ret = PCF_Write(0x09, buffer, sizeof(buffer));
-	if (ret != ESP_OK) {
-		return -1;
-	}
-
-	return 0;
-}
-
-int PCF_GetAlarm(PCF_Alarm *alarm) {
-	uint8_t buffer[4];
-
-	esp_err_t ret = PCF_Read(0x09, buffer, sizeof(buffer));
-	if (ret != ESP_OK) {
-		return -1;
-	}
-
-	alarm->minute = (((buffer[0] >> 4) & 0x0F) * 10) + (buffer[0] & 0x0F);
-	alarm->hour = (((buffer[1] >> 4) & 0x0B) * 10) + (buffer[1] & 0x0F);
-	alarm->day = (((buffer[2] >> 4) & 0x0B) * 10) + (buffer[2] & 0x0F);
-	alarm->weekday = (((buffer[3] >> 4) & 0x08) * 10) + (buffer[3] & 0x07);
-
-	return 0;
-}
 
 int PCF_SetDateTime(PCF_DateTime *dateTime) {
 	if (dateTime->second >= 60 || dateTime->minute >= 60 || dateTime->hour >= 24 || dateTime->day > 32 || dateTime->weekday > 6 || dateTime->month > 12 || dateTime->year < 1900 || dateTime->year >= 2100)
@@ -322,48 +233,3 @@ int PCF_systohc(){
 fail:
 	return ret;
 }
-
-#ifdef main
-
-#include "PCF8563.h"
-
-void iic_set_up()
-{
-    i2c_config_t conf = {0};
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = 21;
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = 22;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = 100000;
-    esp_err_t ret = i2c_param_config(I2C_NUM_0, &conf);
-    assert(ret == ESP_OK);
-    ret = i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0);
-    assert(ret == ESP_OK);
-}
-
-static const char *LOG_TAG = "PCF8563";
-
-void app_main(void)
-{
-    iic_set_up();
-
-    while (true) {
-        
-        int ret = PCF_hctosys();
-        if (ret != 0) {
-            
-            PCF_systohc();
-
-            ESP_LOGE(LOG_TAG, "Error reading hardware clock: %d", ret);
-        }
-
-        printf("ret %d time %ld\n ", ret, time(NULL));
-
-        vTaskDelay(5000 / portTICK_RATE_MS);
-
-    }
-
-    return;
-}
-#endif
