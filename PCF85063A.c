@@ -16,7 +16,28 @@
 #include <time.h>
 #include <sys/time.h>
 
+#define BinToBCD(bin) ((((bin) / 10) << 4) + ((bin) % 10))
+
 static esp_err_t last_i2c_err = ESP_OK; 
+
+/**
+ * @brief Config and initialize the I2C
+ *
+ * @return esp_err_t
+ */
+static esp_err_t i2c_master_driver_initialize(void)
+{
+	// Check your used i2c port, it may be different according to your project
+	i2c_config_t conf = {
+		.mode = I2C_MODE_MASTER,
+		.sda_io_num = 21,
+		.sda_pullup_en = GPIO_PULLUP_ENABLE,
+		.scl_io_num = 22,
+		.scl_pullup_en = GPIO_PULLUP_ENABLE,
+		.master.clk_speed = 100000};
+	return i2c_param_config(I2C_NUM_0, &conf);
+}
+
 
 esp_err_t PCF_Write(uint8_t addr, uint8_t *data, size_t count) {
 
@@ -55,8 +76,6 @@ esp_err_t PCF_Read(uint8_t addr, uint8_t *data, size_t count) {
 esp_err_t PCF_GetLastError(){
 	return last_i2c_err;
 }
-
-#define BinToBCD(bin) ((((bin) / 10) << 4) + ((bin) % 10))
 
 int PCF_Init(uint8_t mode){
 	static bool init = false;
