@@ -1,8 +1,11 @@
-#pragma once
+#ifndef __PCF85063A_H__
+#define __PCF85063A_H__
 
 #include <stdint.h>
 #include <stddef.h>
 #include "esp_system.h"
+#include <time.h>
+#include <sys/time.h>
 
 
 #define PCF8563_READ_ADDR               0xA3
@@ -62,3 +65,4 @@ int PCF_GetDateTime(PCF_DateTime *dateTime);
 int PCF_hctosys();
 int PCF_systohc();
 
+#endif
