@@ -273,3 +273,31 @@ int PCF_systemUpdateRTC(void)
 fail:
 	return ret;
 }
+
+/**
+ * @brief Updates only the RTC time from a struct time passed as reference
+ * 
+ * @param tm_str Struct timer pointer
+ * @return int -1 if write fails, 0 if its okay
+ */
+int PCF_updateRTC(struct tm *tm_str)
+{
+	PCF_DateTime date = {0};
+	int ret;
+
+	ret = PCF_Init();
+	if (ret != 0)
+	{
+		return -1;
+	}
+
+	date.second = tm_str->tm_sec;
+	date.minute = tm_str->tm_min;
+	date.hour = tm_str->tm_hour;
+	date.day = tm_str->tm_mday;
+	date.month = tm_str->tm_mon + 1;
+	date.year = tm_str->tm_year + TM_YEAR_BASE;
+	date.weekday = tm_str->tm_wday;
+
+	return PCF_SetDateTime(&date);
+}
