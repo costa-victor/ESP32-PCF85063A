@@ -7,7 +7,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-
 #define PCF8563_READ_ADDR               0xA3
 #define PCF8563_WRITE_ADDR              0xA2
 
@@ -28,9 +27,6 @@
 #define PCF_TIMER_1_60HZ                0b10000011
 #define PCF_TIMER_DISABLED              0b00000011
 
-#define PCF_DISABLE_ALARM               80
-
-
 typedef struct {
     uint8_t minute;
     uint8_t hour;
@@ -49,20 +45,13 @@ typedef struct {
 } PCF_DateTime;
 
 
-int PCF_Init(uint8_t mode);
-
+int PCF_Init(void);
 esp_err_t PCF_Write(uint8_t addr, uint8_t *data, size_t count);
 esp_err_t PCF_Read(uint8_t addr, uint8_t *data, size_t count);
-esp_err_t PCF_GetLastError();
-int PCF_GetAndClearFlags(void);
-int PCF_SetClockOut(uint8_t mode);
-int PCF_SetTimer(uint8_t mode, uint8_t count);
-int PCF_GetTimer(void);
-int PCF_SetAlarm(PCF_Alarm *alarm);
-int PCF_GetAlarm(PCF_Alarm *alarm);
 int PCF_SetDateTime(PCF_DateTime *dateTime);
 int PCF_GetDateTime(PCF_DateTime *dateTime);
-int PCF_hctosys();
-int PCF_systohc();
+int PCF_rtcUpdateSYSTEM(void);
+int PCF_systemUpdateRTC(void);
+int PCF_updateRTC(struct tm *tm_srt);
 
 #endif
