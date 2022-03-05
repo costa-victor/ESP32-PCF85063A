@@ -1,13 +1,20 @@
+/**
+ * @file PCF85063A.c
+ * @author Victor Alberti Costa (https://github.com/costa-victor)
+ * @brief Driver for the RTC PCF85063A:
+ * DATASHEET: https://pdf1.alldatasheet.com/datasheet-pdf/view/1255455/NXP/PCF85063A.html
+ * @version 0.1
+ * @date 2022-03-04
+ *
+ */
 
 #include "esp_system.h"
-#include "PCF8563.h"
+#include "PCF85063A.h"
 #include "driver/i2c.h"
 #include "timegm.h"
-
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
-
 
 static esp_err_t last_i2c_err = ESP_OK; 
 
