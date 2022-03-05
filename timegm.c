@@ -14,8 +14,9 @@
  * conversion exists....
  */
 
-#define EPOCH_YEAR		1970
-#define TM_YEAR_BASE	1900
+// #define EPOCH_YEAR		1970
+// #define TM_YEAR_BASE	1900
+
 
 static time_t
 sub_mkgmt(struct tm *tm)
