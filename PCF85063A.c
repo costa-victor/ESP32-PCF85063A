@@ -39,38 +39,60 @@ static esp_err_t i2c_master_driver_initialize(void)
 }
 
 
-esp_err_t PCF_Write(uint8_t addr, uint8_t *data, size_t count) {
+/**
+ * @brief Writes an amount of data to the specified register using I2C
+ *
+ * @param addr Register address
+ * @param data Data
+ * @param length Data length in bytes
+ * @return esp_err_t Error type
+ */
+esp_err_t PCF_Write(uint8_t addr, uint8_t *data, size_t length)
+{
 
 	last_i2c_err = ESP_OK;
+	i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);	// Install and uninstall I2C driver every time
+	i2c_master_driver_initialize();
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, PCF8563_WRITE_ADDR, true);
 	i2c_master_write_byte(cmd, addr, true);
-	i2c_master_write(cmd, data, count, true);
+	i2c_master_write(cmd, data, length, true);
 	i2c_master_stop(cmd);
 	esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
+	i2c_cmd_link_delete(cmd);
+	i2c_driver_delete(I2C_NUM_0);
 	last_i2c_err = ret;
-	printf("last_i2c_err %d\n", last_i2c_err);
-    return ret;
+	return ret;
 }
 
-esp_err_t PCF_Read(uint8_t addr, uint8_t *data, size_t count) {
 
+/**
+ * @brief Reads an amount of data to the specified register using I2C
+ *
+ * @param addr Register address
+ * @param data Data
+ * @param length Data length in bytes
+ * @return esp_err_t Error type
+ */
+esp_err_t PCF_Read(uint8_t addr, uint8_t *data, size_t length)
+{
 	last_i2c_err = ESP_OK;
+	i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+	i2c_master_driver_initialize();
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, PCF8563_WRITE_ADDR, true);
 	i2c_master_write_byte(cmd, addr, true);
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, PCF8563_READ_ADDR, true);
-	i2c_master_read(cmd, data, count, I2C_MASTER_LAST_NACK);
+	i2c_master_read(cmd, data, length, I2C_MASTER_LAST_NACK);
 	i2c_master_stop(cmd);
 	esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
+	i2c_cmd_link_delete(cmd);
+	i2c_driver_delete(I2C_NUM_0);
 	last_i2c_err = ret;
-	printf("last_i2c_err %d\n", last_i2c_err);
-    return ret;
+	return ret;
 }
 
 esp_err_t PCF_GetLastError(){
