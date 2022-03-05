@@ -139,8 +139,16 @@ int PCF_Init(void)
 }
 
 
-int PCF_SetDateTime(PCF_DateTime *dateTime) {
-	if (dateTime->second >= 60 || dateTime->minute >= 60 || dateTime->hour >= 24 || dateTime->day > 32 || dateTime->weekday > 6 || dateTime->month > 12 || dateTime->year < 1900 || dateTime->year >= 2100)
+/**
+ * @brief Updates RTC's timestamp from a PCF_DateTime structure
+ * 
+ * @param dateTime Points to a PCF_DataTime structure type
+ * @return int 0 if success, -1 if fails write in register, -2 if there is an invalid parameter
+ */
+int PCF_SetDateTime(PCF_DateTime *dateTime)
+{
+	// Search for invalid parameters
+	if (dateTime->second >= 60 || dateTime->minute >= 60 || dateTime->hour >= 24 || dateTime->day > 32 || dateTime->weekday > 6 || dateTime->month > 12 || dateTime->year < TM_YEAR_BASE || dateTime->year >= 2100)
 	{
 		return -2;
 	}
@@ -153,31 +161,31 @@ int PCF_SetDateTime(PCF_DateTime *dateTime) {
 	buffer[3] = BinToBCD(dateTime->day) & 0x3F;
 	buffer[4] = BinToBCD(dateTime->weekday) & 0x07;
 	buffer[5] = BinToBCD(dateTime->month) & 0x1F;
+	buffer[6] = BinToBCD(dateTime->year - TM_YEAR_BASE);
 
-	if (dateTime->year >= 2000)
+	esp_err_t ret = PCF_Write(0x04, buffer, sizeof(buffer));
+	if (ret != ESP_OK)
 	{
-		buffer[5] |= 0x80;
-		buffer[6] = BinToBCD(dateTime->year - 2000);
-	}
-	else
-	{
-		buffer[6] = BinToBCD(dateTime->year - 1900);
-	}
-
-	esp_err_t ret = PCF_Write(0x02, buffer, sizeof(buffer));
-	if (ret != ESP_OK) {
 		return -1;
 	}
 
 	return 0;
 }
 
-int PCF_GetDateTime(PCF_DateTime *dateTime) {
+/**
+ * @brief Updates a PCF_DateTime structure from the RTC's timestamp
+ * 
+ * @param dateTime Points to a PCF_DataTime structure type
+ * @return int 1 if clock integrity isn't guaranted, 0 if success, -1 if read fails
+ */
+int PCF_GetDateTime(PCF_DateTime *dateTime)
+{
 	uint8_t buffer[7];
 	esp_err_t ret;
 
-	ret = PCF_Read(0x02, buffer, sizeof(buffer));
-	if (ret != ESP_OK) {
+	ret = PCF_Read(0x04, buffer, sizeof(buffer));
+	if (ret != ESP_OK)
+	{
 		return -1;
 	}
 
@@ -187,21 +195,15 @@ int PCF_GetDateTime(PCF_DateTime *dateTime) {
 	dateTime->day = (((buffer[3] >> 4) & 0x03) * 10) + (buffer[3] & 0x0F);
 	dateTime->weekday = (buffer[4] & 0x07);
 	dateTime->month = ((buffer[5] >> 4) & 0x01) * 10 + (buffer[5] & 0x0F);
-	dateTime->year = 1900 + ((buffer[6] >> 4) & 0x0F) * 10 + (buffer[6] & 0x0F);
+	dateTime->year = (TM_YEAR_BASE + 0) + ((buffer[6] >> 4) & 0x0F) * 10 + (buffer[6] & 0x0F);
 
-	if (buffer[5] &  0x80)
-	{
-		dateTime->year += 100;
-	}
-
-	if (buffer[0] & 0x80) //Clock integrity not guaranted
+	if (buffer[0] & 0x80) 	// Clock integrity not guaranted
 	{
 		return 1;
 	}
 
 	return 0;
 }
-
 int PCF_hctosys(){
 	int ret;
 	PCF_DateTime date = {0};
