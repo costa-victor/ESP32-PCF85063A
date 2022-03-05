@@ -204,28 +204,35 @@ int PCF_GetDateTime(PCF_DateTime *dateTime)
 
 	return 0;
 }
-int PCF_hctosys(){
-	int ret;
+
+/**
+ * @brief Updates the system time from the RTC date
+ * 
+ * @return int 1 if clock integrity isn't guaranted, 0 if success, -1 if read fails
+ */
+int PCF_rtcUpdateSYSTEM(void)
+{
+	int ret = 0;
 	PCF_DateTime date = {0};
 	struct tm tm = {0};
 	struct timeval tv = {0};
-	
-	ret = PCF_Init(0);
-	printf("PCF_Init %d\n", ret);
-	if (ret != 0) {
+
+	ret = PCF_Init();
+	if (ret != 0)
+	{
 		goto fail;
 	}
-    ret = PCF_GetDateTime(&date);
-	printf("PCF_GetDateTime %d\n", ret);
-    if (ret != 0) {
+	ret = PCF_GetDateTime(&date);
+	if (ret != 0)
+	{
 		goto fail;
-    }
+	}
 	tm.tm_sec = date.second;
 	tm.tm_min = date.minute;
 	tm.tm_hour = date.hour;
 	tm.tm_mday = date.day;
 	tm.tm_mon = date.month - 1;
-	tm.tm_year = date.year - 1900;
+	tm.tm_year = date.year - TM_YEAR_BASE;
 
 	tv.tv_sec = timegm(&tm);
 	tv.tv_usec = 0;
@@ -234,13 +241,20 @@ fail:
 	return ret;
 }
 
-int PCF_systohc(){
+/**
+ * @brief Updates the RTC date from the system time
+ * 
+ * @return int 1 if clock integrity isn't guaranted, 0 if success, -1 if read fails
+ */
+int PCF_systemUpdateRTC(void)
+{
 	int ret;
 	PCF_DateTime date = {0};
 	struct tm tm = {0};
 
-	ret = PCF_Init(0);
-	if (ret != 0) {
+	ret = PCF_Init();
+	if (ret != 0)
+	{
 		goto fail;
 	}
 
@@ -251,7 +265,7 @@ int PCF_systohc(){
 	date.hour = tm.tm_hour;
 	date.day = tm.tm_mday;
 	date.month = tm.tm_mon + 1;
-	date.year = tm.tm_year + 1900;
+	date.year = tm.tm_year + TM_YEAR_BASE;
 	date.weekday = tm.tm_wday;
 
 	ret = PCF_SetDateTime(&date);
