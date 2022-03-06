@@ -34,7 +34,7 @@ static esp_err_t i2c_master_driver_initialize(void)
 		.sda_pullup_en = GPIO_PULLUP_ENABLE,
 		.scl_io_num = SCL_PIN,
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
-		.master.clk_speed = 100000};
+		.master.clk_speed = I2C_MASTER_CLK};
 	return i2c_param_config(I2C_NUM_0, &conf);
 }
 

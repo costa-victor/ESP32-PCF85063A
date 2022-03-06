@@ -27,8 +27,9 @@
 #define PCF_TIMER_1_60HZ                0b10000011
 #define PCF_TIMER_DISABLED              0b00000011
 
-#define SDA_PIN     21
-#define SCL_PIN     22
+#define SDA_PIN         21
+#define SCL_PIN         22
+#define I2C_MASTER_CLK  100000
 
 typedef struct {
     uint8_t minute;
