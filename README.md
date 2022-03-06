@@ -1,9 +1,11 @@
 # ESP32-PCF85063A
 
 ## Environment
-**Build environment:** Linux Mint 20 x86_64
-**Target device:** ESP32 NodeMCU
+
+**Build environment:** Linux Mint 20 x86_64<br>
+**Target device:** ESP32 NodeMCU<br>
 **ESPIDF version:** v4.4
+
 
 ## Description
 
