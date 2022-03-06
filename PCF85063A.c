@@ -30,9 +30,9 @@ static esp_err_t i2c_master_driver_initialize(void)
 	// Check your used i2c port, it may be different according to your project
 	i2c_config_t conf = {
 		.mode = I2C_MODE_MASTER,
-		.sda_io_num = 21,
+		.sda_io_num = SDA_PIN,
 		.sda_pullup_en = GPIO_PULLUP_ENABLE,
-		.scl_io_num = 22,
+		.scl_io_num = SCL_PIN,
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
 		.master.clk_speed = 100000};
 	return i2c_param_config(I2C_NUM_0, &conf);
